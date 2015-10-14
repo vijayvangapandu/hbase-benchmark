@@ -1,0 +1,66 @@
+package benchmark.hbase;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.util.concurrent.TimeUnit;
+
+import org.HdrHistogram.Histogram;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import benchmark.StoreOperationExecutor;
+import benchmark.hbase.report.Histograms;
+import benchmark.hbase.util.PhoenixConnectionManager;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+
+public class HBaseReadOperationExecutor implements StoreOperationExecutor {
+
+    private static final Logger log = LoggerFactory.getLogger(HBaseReadOperationExecutor.class);
+    private final WorkRecordGenerator workRecordGenerator;
+    private final Histogram histogram;
+
+    public HBaseReadOperationExecutor(final WorkRecordGenerator workRecordGenerator) {
+        this.workRecordGenerator         = Preconditions.checkNotNull(workRecordGenerator);
+        this.histogram      =  Histograms.create();
+    }
+
+    @Override
+    public void close() throws Exception {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public Histogram call() throws Exception {
+        int messageCount = 0;
+
+        try {
+            String readQuery = workRecordGenerator.generateNextReadWorkRecord();
+            ResultSet rs= null;
+            while(StringUtils.isNotEmpty(readQuery)) {
+                final Stopwatch stopwatch = new Stopwatch().start();
+                Connection conn =  PhoenixConnectionManager.getConnection();
+                rs = conn.prepareStatement(readQuery).executeQuery();
+                if(rs != null && rs.next()) {
+                    Object uid = rs.getObject("uid");
+                    if(uid != null) {
+                        log.info("select success for user {}", uid);
+                    }
+                } 
+                messageCount++;
+                stopwatch.stop();
+                histogram.recordValue(stopwatch.elapsedTime(TimeUnit.MILLISECONDS));
+                readQuery = workRecordGenerator.generateNextReadWorkRecord();
+            }
+            
+        } catch (final Exception e) {
+            log.info("exception whil reading records from hbase...", e);
+        }
+
+        log.info("In total  {} messages retrieved from store", messageCount);
+
+        return histogram;
+    }
+}
