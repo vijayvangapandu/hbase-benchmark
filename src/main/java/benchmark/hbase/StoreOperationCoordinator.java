@@ -17,18 +17,12 @@
 package benchmark.hbase;
 
 import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
 
 import org.HdrHistogram.Histogram;
 
 import benchmark.StoreOperationExecutor;
 import benchmark.hbase.controller.BenchmarkType;
 
-/**
- * Defines common code for coordinating message producers.
- * Needs to be overridden to add specific implementations for message producer creation.
- */
 public abstract class StoreOperationCoordinator implements AutoCloseable {
     private final int numThreads;
     private final long numRecords;
@@ -46,15 +40,13 @@ public abstract class StoreOperationCoordinator implements AutoCloseable {
         return benchMarkType;
     }
 
-    private final CompletionService<Histogram> executorCompletionService;
-
     public StoreOperationCoordinator(final long numRecords, final int numThreads, final BenchmarkType benchMarkType) {
-        this.numThreads                     = numThreads;
-        this.numRecords                     = numRecords;
-        this.benchMarkType                  = benchMarkType;
-        this.executorCompletionService      = new ExecutorCompletionService<Histogram>(Executors.newFixedThreadPool(numThreads));
+        this.numThreads = numThreads;
+        this.numRecords = numRecords;
+        this.benchMarkType = benchMarkType;
     }
 
     public abstract CompletionService<Histogram> invokeOperation();
+
     public abstract StoreOperationExecutor createStoreOperationExecutor(long numRecords);
 }

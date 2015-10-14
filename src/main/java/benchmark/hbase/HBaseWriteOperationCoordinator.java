@@ -8,6 +8,7 @@ import org.HdrHistogram.Histogram;
 
 import benchmark.StoreOperationExecutor;
 import benchmark.hbase.controller.BenchmarkType;
+import benchmark.hbase.data.WriteWorkRecordGenerator;
 
 public class HBaseWriteOperationCoordinator extends StoreOperationCoordinator {
 
@@ -39,13 +40,12 @@ public class HBaseWriteOperationCoordinator extends StoreOperationCoordinator {
 
     @Override
     public StoreOperationExecutor createStoreOperationExecutor(long numRecords) {
-        WorkRecordGenerator workRecordGenerator =  new WorkRecordGenerator(numRecords);
+        WriteWorkRecordGenerator workRecordGenerator =  new WriteWorkRecordGenerator(numRecords);
         final StoreOperationExecutor storeOperationExecutor = new HBaseWriteOperationExecutor(workRecordGenerator);
         return storeOperationExecutor;
     }
     @Override
     public void close() throws Exception {
-        // TODO Auto-generated method stub
         
     }
 }

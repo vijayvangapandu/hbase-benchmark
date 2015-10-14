@@ -12,23 +12,23 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 import benchmark.StoreOperationExecutor;
+import benchmark.hbase.data.WriteWorkRecordGenerator;
 import benchmark.hbase.report.Histograms;
 import benchmark.hbase.util.PhoenixConnectionManager;
 
 public class HBaseWriteOperationExecutor implements StoreOperationExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(HBaseWriteOperationExecutor.class);
-    private final WorkRecordGenerator workRecordGenerator;
+    private final WriteWorkRecordGenerator workRecordGenerator;
     private final Histogram histogram;
 
-    public HBaseWriteOperationExecutor(final WorkRecordGenerator workRecordGenerator) {
+    public HBaseWriteOperationExecutor(final WriteWorkRecordGenerator workRecordGenerator) {
         this.workRecordGenerator         = Preconditions.checkNotNull(workRecordGenerator);
         this.histogram      =  Histograms.create();
     }
 
     @Override
     public void close() throws Exception {
-        // TODO Auto-generated method stub
     }
 
     @Override
@@ -36,21 +36,21 @@ public class HBaseWriteOperationExecutor implements StoreOperationExecutor {
         int messageCount = 0;
 
         try {
-            String writeQuery = workRecordGenerator.generateNextWriteWorkRecord();
+            String writeQuery = workRecordGenerator.generateNextWorkRecord();
             int updateStatus = 0;
+            Connection conn =  PhoenixConnectionManager.getConnection();
             while(StringUtils.isNotEmpty(writeQuery)) {
                 final Stopwatch stopwatch = new Stopwatch().start();
-                Connection conn =  PhoenixConnectionManager.getConnection();
                 updateStatus = conn.prepareStatement(writeQuery).executeUpdate();
                 if(updateStatus ==0) {
                     log.info("update unsuccessfull...");
                 } else {
-                    log.info("update successfull...");
+                    log.debug("update successfull...");
                 }
                 messageCount++;
                 stopwatch.stop();
                 histogram.recordValue(stopwatch.elapsedTime(TimeUnit.MILLISECONDS));
-                writeQuery = workRecordGenerator.generateNextWriteWorkRecord();
+                writeQuery = workRecordGenerator.generateNextWorkRecord();
             }
             
         } catch (final Exception e) {

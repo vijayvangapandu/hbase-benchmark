@@ -55,7 +55,6 @@ public class LoggingReport implements Report {
         logInfo("=======================================");
         logInfo("HBase Benchmark stats");
         logInfo("=======================================");
-        logInfo("All units are {} unless stated otherwise", Consts.TIME_UNIT_FOR_REPORTING.name());
         logInfo("DURATION (SECOND):      {}", durationInSeconds);
         logInfo("USERS THROUGHPUT / SECOND:    {}", usersThroughputPerSecond);
         logInfo("MATCHES THROUGHPUT / SECOND:    {}", matchesThroughputPerSecond);
